@@ -55,6 +55,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.Vector;
+import android.app.admin.DevicePolicyManager;
 
 
 public class main extends Activity {
@@ -205,6 +206,16 @@ public class main extends Activity {
 
         preferences = PreferenceManager
                 .getDefaultSharedPreferences(application);
+
+        DevicePolicyManager policyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        ComponentName adminReceiver = new ComponentName(this, AdminReceiver.class);
+        boolean admin = policyManager.isAdminActive(adminReceiver);
+        if (!admin) {
+            Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminReceiver);
+            intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "BIND_DEVICE_ADMIN is required for USES_POLICY_FORCE_LOCK.");
+            startActivity(intent);
+        }
 
         try {
             boolean local = preferences.getBoolean("useLocalStorage", false);

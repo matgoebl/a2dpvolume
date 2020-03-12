@@ -63,6 +63,7 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.Handler;
 import android.provider.Settings.SettingNotFoundException;
+import android.app.admin.DevicePolicyManager;
 import java.net.URLEncoder;
 
 import static a2dp.Vol.R.drawable.ic_launcher;
@@ -1136,6 +1137,13 @@ public class service extends Service implements OnAudioFocusChangeListener {
 
             if (bt2.getBdevice() != null && bt2.getBdevice().contains("://")) {
                 new HttpNotifyAsyncTask().execute(bt2.getBdevice(), "disconnected", bt2.toString());
+            }
+
+            try {
+                    DevicePolicyManager policyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+                    policyManager.lockNow();
+            } catch (Exception e) {
+                    Log.e(LOG_TAG, e.toString());
             }
         }
 
