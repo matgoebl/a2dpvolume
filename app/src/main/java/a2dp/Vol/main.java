@@ -197,7 +197,7 @@ public class main extends Activity {
             Log.e(LOG_TAG, "error" + e.getMessage());
         }
 
-        setTitle(res.getString(R.string.app_name) + " Version: "
+        setTitle(res.getString(R.string.app_name) + " "
                 + ver);
         // get "Application" object for shared state or creating of expensive
         // resources - like DataHelper
