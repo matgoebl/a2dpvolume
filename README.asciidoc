@@ -1,3 +1,18 @@
+= About this fork
+
+This fork adds special tasks for car connection
+
+- start/stop gpslogger (https://github.com/mendhak/gpslogger)
+- keep screen on while connected
+- immediately lock device on disconnection
+- notify remote server about connections/disconnections
+  (url must be entered in field "Also connect to bluetooth device")
+
+Above tasks are run for devices that are assigned the car connection icon
+
+Upstream version: https://github.com/jroal/a2dpvolume
+
+
 = Overview
 
 Please read the link:../../wiki/Manual[manual] to get started.
