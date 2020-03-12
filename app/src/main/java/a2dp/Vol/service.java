@@ -54,6 +54,16 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.RemoteViews;
 import android.widget.Toast;
+import android.os.AsyncTask;
+import java.net.URL;
+import java.net.HttpURLConnection;
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
+import android.os.Handler;
+import android.provider.Settings.SettingNotFoundException;
+import java.net.URLEncoder;
 
 import static a2dp.Vol.R.drawable.ic_launcher;
 
@@ -166,6 +176,10 @@ public class service extends Service implements OnAudioFocusChangeListener {
     Boolean permSMS = true;
     Boolean permStorage = true;
 
+    private WakeLock wakeLock;
+    private PowerManager powerManager;
+    private int savedScreenTimeout;
+    private final static String WAKELOCK_TAG = "A2DP_Volume_WakeLock";
 
     /*
      * private HandlerThread thread; private LinkedList<String> addresses;
@@ -247,6 +261,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
         locmanager = (LocationManager) getBaseContext().getSystemService(
                 Context.LOCATION_SERVICE);
 
+        powerManager = (PowerManager)getSystemService(POWER_SERVICE);
 
         // set run flag to true. This is used for the GUI
         run = true;
@@ -822,6 +837,23 @@ public class service extends Service implements OnAudioFocusChangeListener {
                 runApp(bt2);
         }
 
+        if (connectedIcon == R.drawable.car2) {
+            Log.d(LOG_TAG, "running special tasks for car connected...");
+
+            Intent i = new Intent("com.mendhak.gpslogger.TASKER_COMMAND");
+            i.setPackage("com.mendhak.gpslogger");
+            i.putExtra("immediatestart", true);
+            sendBroadcast(i);
+
+            if (bt2.getBdevice() != null && bt2.getBdevice().contains("://")) {
+                new HttpNotifyAsyncTask().execute(bt2.getBdevice(), "connected", bt2.toString());
+            }
+
+            if (wakeLock==null || !wakeLock.isHeld()) {
+                wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, WAKELOCK_TAG);
+                wakeLock.acquire();
+            }
+        }
 
         if (enableGTalk && bt2.isEnableTTS()) {
             mTts = new TextToSpeech(application, listenerStarted);
@@ -1087,6 +1119,23 @@ public class service extends Service implements OnAudioFocusChangeListener {
                 };
                 killTimer.start();
 
+            }
+        }
+
+        if (connectedIcon == R.drawable.car2) {
+            Log.d(LOG_TAG, "running special tasks for car disconnected...");
+
+            if (wakeLock!=null) {
+                wakeLock.release();
+            }
+
+            Intent i = new Intent("com.mendhak.gpslogger.TASKER_COMMAND");
+            i.setPackage("com.mendhak.gpslogger");
+            i.putExtra("immediatestop", true);
+            sendBroadcast(i);
+
+            if (bt2.getBdevice() != null && bt2.getBdevice().contains("://")) {
+                new HttpNotifyAsyncTask().execute(bt2.getBdevice(), "disconnected", bt2.toString());
             }
         }
 
@@ -2168,4 +2217,36 @@ public class service extends Service implements OnAudioFocusChangeListener {
         }
         return false;
     }
+
+
+    public class HttpNotifyAsyncTask extends AsyncTask<String, Void, String> {
+      @Override
+      protected String doInBackground(String... params) {
+        try {
+            String baseUrl = params[0];
+            String event = params[1];
+            String device = params[2];
+            String fullUrl = baseUrl + URLEncoder.encode( event + " " + device.replaceAll(" ", "_"), "utf-8" );
+            Log.d(LOG_TAG, "HTTP-Trigger " + fullUrl);
+            URL url = new URL(fullUrl);
+            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+            int statusCode = urlConnection.getResponseCode();
+            Log.d(LOG_TAG, "HTTP-Status " + statusCode);
+            if (statusCode ==  200) {
+              return "ok";
+            } else {
+            return "ERROR " + statusCode;
+            }
+        } catch (Exception e) {
+            Log.d(LOG_TAG, e.getLocalizedMessage());
+            return "ERROR " + e.getLocalizedMessage();
+        }
+    }
+      @Override
+      protected void onPostExecute(String result){
+        Toast.makeText(getApplicationContext(), "Server Trigger: " + result, Toast.LENGTH_LONG).show();
+      }
+    }
 }
+ 
