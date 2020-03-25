@@ -826,18 +826,6 @@ public class service extends Service implements OnAudioFocusChangeListener {
             Toast.makeText(application, bt2.toString(), Toast.LENGTH_LONG)
                     .show();
 
-        // If we defined an app to auto-start then run it on connect if not in
-        // call
-        // tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-
-        if (bt2.hasIntent()) {
-            if (tm != null) {
-                if (tm.getCallState() == TelephonyManager.CALL_STATE_IDLE)
-                    runApp(bt2);
-            } else
-                runApp(bt2);
-        }
-
         if (connectedIcon == R.drawable.car2) {
             Log.d(LOG_TAG, "running special tasks for car connected...");
 
@@ -942,6 +930,31 @@ public class service extends Service implements OnAudioFocusChangeListener {
             set_car_mode(true);
         }
 
+        // If we defined an app to auto-start then run it on connect if not in
+        // call
+        // tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+
+        if (bt2.hasIntent() && bt2.getPname() == null && !bt2.getPname().equals("") ) {
+            if (tm != null) {
+                if (tm.getCallState() == TelephonyManager.CALL_STATE_IDLE)
+                    runApp(bt2);
+            } else
+                runApp(bt2);
+        } else {
+            if (connectedIcon == R.drawable.car2) {
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                  @Override
+                  public void run() {
+                    Log.d(LOG_TAG, "running maps...");
+                    Intent intent = getPackageManager().getLaunchIntentForPackage("com.google.android.apps.maps");
+                    intent.setAction(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse("google.navigation:/?free=1&mode=d&entry=fnls"));
+                    startActivity(intent);
+                  }
+                }, 1000);
+            }
+        }
         updateNot();
     }
 
@@ -1081,7 +1094,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
 
         int SavVol = am2.getStreamVolume(AudioManager.STREAM_MUSIC);
 
-        if (bt2.hasIntent()) {
+        if (bt2.hasIntent() && bt2.getPname() == null && !bt2.getPname().equals("")) {
 
             // if we opened a package for this device, try to close it now
             if (bt2.getPname().length() > 3 && bt2.isAppkill()) {
@@ -1120,6 +1133,24 @@ public class service extends Service implements OnAudioFocusChangeListener {
                 };
                 killTimer.start();
 
+            }
+        } else {
+            if (connectedIcon == R.drawable.car2) {
+                Log.d(LOG_TAG, "stopping maps...");
+                Intent intent = getPackageManager().getLaunchIntentForPackage("com.google.android.apps.maps");
+                intent.setAction(Intent.ACTION_VIEW);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                  @Override
+                  public void run() {
+                    Intent startMain = new Intent(Intent.ACTION_MAIN);
+                    startMain.addCategory(Intent.CATEGORY_HOME);
+                    startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(startMain);
+                  }
+                }, 500);
             }
         }
 
