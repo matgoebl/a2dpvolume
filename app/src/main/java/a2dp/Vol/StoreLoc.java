@@ -39,6 +39,9 @@ import android.support.v4.content.ContextCompat;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.widget.Toast;
+import android.os.AsyncTask;
+import java.net.URL;
+import java.net.HttpURLConnection;
 
 import static a2dp.Vol.R.drawable.ic_launcher;
 
@@ -464,6 +467,10 @@ public class StoreLoc extends Service {
                         .show();
                 e.printStackTrace();
             }
+            if (btdConn.getBdevice() != null && btdConn.getBdevice().contains("://")) {
+                new HttpNotifyAsyncTask().execute(btdConn.getBdevice(), "gps", btdConn.toString(),
+                  l4.getLatitude() + " " + l4.getLongitude() + " " + df.format(l4.getAccuracy()) );
+            }
         }
 
         // store most accurate location
@@ -862,4 +869,34 @@ public class StoreLoc extends Service {
         }
     }
 
+    public class HttpNotifyAsyncTask extends AsyncTask<String, Void, String> {
+      @Override
+      protected String doInBackground(String... params) {
+        try {
+            String baseUrl = params[0];
+            String event = params[1];
+            String device = params[2];
+            String pos = params[3] != null ? params[3] : "";
+            String fullUrl = baseUrl + URLEncoder.encode( event + " " + device.replaceAll(" ", "_") + " " + pos, "utf-8" );
+            Log.d(LOG_TAG, "HTTP-Trigger " + fullUrl);
+            URL url = new URL(fullUrl);
+            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+            int statusCode = urlConnection.getResponseCode();
+            Log.d(LOG_TAG, "HTTP-Status " + statusCode);
+            if (statusCode ==  200) {
+              return "ok";
+            } else {
+            return "ERROR " + statusCode;
+            }
+        } catch (Exception e) {
+            Log.d(LOG_TAG, e.getLocalizedMessage());
+            return "ERROR " + e.getLocalizedMessage();
+        }
+    }
+      @Override
+      protected void onPostExecute(String result){
+        Toast.makeText(getApplicationContext(), "Server Trigger: " + result, Toast.LENGTH_LONG).show();
+      }
+    }
 }
