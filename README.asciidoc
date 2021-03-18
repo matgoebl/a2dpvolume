@@ -1,6 +1,6 @@
 = About this fork
 
-This fork adds special tasks for car connection
+This fork adds special tasks for car connection:
 
 - start/stop gpslogger (https://github.com/mendhak/gpslogger)
 - keep screen on while connected
@@ -9,6 +9,12 @@ This fork adds special tasks for car connection
   (url must be entered in field "Also connect to bluetooth device")
 
 Above tasks are run for devices that are assigned the car connection icon
+
+
+Further changes:
+
+- special method to stop com.arachnoid.sshelper
+
 
 Upstream version: https://github.com/jroal/a2dpvolume
 
