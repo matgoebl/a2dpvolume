@@ -59,6 +59,7 @@ import java.net.URL;
 import java.net.HttpURLConnection;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.io.IOException;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.Handler;
@@ -1756,12 +1757,26 @@ public class service extends Service implements OnAudioFocusChangeListener {
 
     }
 
+    protected void systemExec(String[] cmd) {
+        Log.e(LOG_TAG, "systemExec: " + String.join(" ", cmd));
+        try {
+            Runtime.getRuntime().exec(cmd);
+        } catch (IOException err) {
+            err.printStackTrace();
+        }
+    }
+
     protected void stopApp(String packageName) {
+        Log.d(LOG_TAG, "stopApp: " + packageName);
+        if (packageName.equals("com.arachnoid.sshelper")) {
+            systemExec(new String[]{ "su", "-c", "am force-stop com.arachnoid.sshelper" });
+            systemExec(new String[]{ "su", "-c", "killall com.arachnoid.sshelper sshd ssh rsync" });
+            return;
+        }
         Intent mIntent = getPackageManager().getLaunchIntentForPackage(
                 packageName);
         if (mIntent != null) {
             try {
-
                 ActivityManager act1 = (ActivityManager) this
                         .getSystemService(ACTIVITY_SERVICE);
                 Objects.requireNonNull(act1).killBackgroundProcesses(packageName);
