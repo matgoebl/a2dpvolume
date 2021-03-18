@@ -3,9 +3,10 @@
 This fork adds special tasks for car connection:
 
 - start/stop gpslogger (https://github.com/mendhak/gpslogger)
+- start/stop google maps in car navigation mode
 - keep screen on while connected
 - immediately lock device on disconnection
-- notify remote server about connections/disconnections
+- notify remote server about connections/disconnections and gps position
   (url must be entered in field "Also connect to bluetooth device")
 
 Above tasks are run for devices that are assigned the car connection icon
