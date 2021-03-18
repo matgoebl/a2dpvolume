@@ -934,7 +934,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
         // call
         // tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
-        if (bt2.hasIntent() && bt2.getPname() == null && !bt2.getPname().equals("") ) {
+        if (bt2.hasIntent() && bt2.getPname() != null && !bt2.getPname().equals("") ) {
             if (tm != null) {
                 if (tm.getCallState() == TelephonyManager.CALL_STATE_IDLE)
                     runApp(bt2);
@@ -1094,7 +1094,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
 
         int SavVol = am2.getStreamVolume(AudioManager.STREAM_MUSIC);
 
-        if (bt2.hasIntent() && bt2.getPname() == null && !bt2.getPname().equals("")) {
+        if (bt2.hasIntent() && bt2.getPname() != null && !bt2.getPname().equals("")) {
 
             // if we opened a package for this device, try to close it now
             if (bt2.getPname().length() > 3 && bt2.isAppkill()) {
