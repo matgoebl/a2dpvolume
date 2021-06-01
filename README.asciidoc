@@ -15,7 +15,16 @@ Above tasks are run for devices that are assigned the car connection icon
 Further changes:
 
 - special method to stop com.arachnoid.sshelper
+- "respond to power connection" can depend on connected WiFi SSID.
+  A list of SSIDs must be entered in field "Also connect to bluetooth device" in
+  the following format:
 
+  ssid: "mynet1" "mynet2" "someothernet"
+
+
+All those changes are very personal and provide only quick-and-dirty configuration.
+Therefore I do not plan to push them upstream.
+But you are invited to pick them if they are useful to you.
 
 Upstream version: https://github.com/jroal/a2dpvolume
 

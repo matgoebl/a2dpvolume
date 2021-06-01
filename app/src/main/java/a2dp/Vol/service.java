@@ -66,6 +66,9 @@ import android.os.Handler;
 import android.provider.Settings.SettingNotFoundException;
 import android.app.admin.DevicePolicyManager;
 import java.net.URLEncoder;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.SupplicantState;
 
 import static a2dp.Vol.R.drawable.ic_launcher;
 
@@ -762,7 +765,23 @@ public class service extends Service implements OnAudioFocusChangeListener {
                     Log.i(LOG_TAG, "Unknown device received, ignoring");
                 } else {
                     Log.i(LOG_TAG, "Broadcast received: " + bt2.getDesc1() + ", " + bt2.getDesc2());
-                    DoConnected(bt2);
+
+                    Boolean triggerPower = true;
+                    if (bt2.getBdevice() != null && bt2.getBdevice().contains("ssid: ")) {
+                        String ssidList = bt2.getBdevice() + " ";
+                        String ssid="DISCONNECTED";
+                        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                        if (wifiInfo.getSupplicantState() == SupplicantState.COMPLETED) {
+                                ssid = wifiInfo.getSSID();
+                        }
+                        triggerPower = ssidList.contains(" " + ssid + " ");
+                        Log.i(LOG_TAG, "PowerEnterReceiver checking, if ssid '" + ssid + "' is in list '" + ssidList + "'. result: " + (triggerPower?"true":"false"));
+                    }
+
+                    if (triggerPower) {
+                        DoConnected(bt2);
+                    }
                 }
             }
         }
