@@ -171,6 +171,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
 
     private volatile boolean connecting = false;
     private volatile boolean disconnecting = false;
+    private volatile boolean power_connected = false;
     private int connectedIcon;
     private TelephonyManager tm; // Context.getSystemService(Context.TELEPHONY_SERVICE);
 
@@ -781,6 +782,9 @@ public class service extends Service implements OnAudioFocusChangeListener {
 
                     if (triggerPower) {
                         DoConnected(bt2);
+                        power_connected = true;
+                    } else {
+                        connecting = false;
                     }
                 }
             }
@@ -1093,7 +1097,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
         @Override
         public void onReceive(Context context2, Intent intent2) {
             btDevice bt2 = null;
-            if (!disconnecting) {
+            if (!disconnecting && power_connected) {
                 disconnecting = true;
                 bt2 = DB.getBTD("4");
 
@@ -1106,6 +1110,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
                     DoDisconnected(bt2);
                 }
             }
+            power_connected = false;
         }
     };
 
