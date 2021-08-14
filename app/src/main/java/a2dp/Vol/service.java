@@ -81,6 +81,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
     private boolean carExitReceiverRegistered = false;
     private boolean homeExitRegistered = false;
     private boolean homeEnterRegistered = false;
+    private boolean lenovoDockReceiverRegistered = false;
     private boolean powerExitRegistered = false;
     private boolean powerEnterRegistered = false;
     private boolean headSetPlugReciverRegistered = false;
@@ -360,7 +361,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
         }
 
         if (homeDock) {
-            // Create listener for when car mode disconnects
+            // Create listener for when dock mode disconnects
             IntentFilter homeExit = new IntentFilter(android.app.UiModeManager.ACTION_EXIT_DESK_MODE);
             if (!homeExitRegistered) {
                 application.registerReceiver(HomeExitReceiver, homeExit);
@@ -368,12 +369,22 @@ public class service extends Service implements OnAudioFocusChangeListener {
                 Log.i(LOG_TAG, "Home Dock exit receiver registered");
             }
 
-            // Create listener for when car mode connects
+            // Create listener for when dock mode connects
             IntentFilter homeEnter = new IntentFilter(android.app.UiModeManager.ACTION_ENTER_DESK_MODE);
             if (!homeEnterRegistered) {
                 application.registerReceiver(HomeEnterReceiver, homeEnter);
                 homeEnterRegistered = true;
                 Log.i(LOG_TAG, "Home Dock enter receiver registered");
+            }
+        }
+
+        if (homeDock) { // dock mode and lenovo dock mode should behave identically
+            // Create listener for when lenovo dock mode connects or disconnects
+            IntentFilter dockEvent = new IntentFilter("ACTION_LENOVO_DOCK_EVENT");
+            if (!lenovoDockReceiverRegistered) {
+                application.registerReceiver(LenovoDockReceiver, dockEvent);
+                lenovoDockReceiverRegistered = true;
+                Log.i(LOG_TAG, "Lenovo Dock receiver registered");
             }
         }
 
@@ -449,6 +460,12 @@ public class service extends Service implements OnAudioFocusChangeListener {
                 application.unregisterReceiver(HomeExitReceiver);
                 homeExitRegistered = false;
                 Log.i(LOG_TAG, "Home exit receiver unregistered");
+            }
+
+            if (lenovoDockReceiverRegistered) {
+                application.unregisterReceiver(LenovoDockReceiver);
+                lenovoDockReceiverRegistered = false;
+                Log.i(LOG_TAG, "Lenovo enter exit receiver unregistered");
             }
 
             if (powerExitRegistered) {
@@ -750,11 +767,53 @@ public class service extends Service implements OnAudioFocusChangeListener {
         }
     };
 
+    // Lenovo dock connected/disconnected
+    private final BroadcastReceiver LenovoDockReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context2, Intent intent2) {
+            int dock_state = intent2.getExtras().getInt("dock_state");
+            Log.i(LOG_TAG, "LenovoDockReceiver Broadcast received, state=" + dock_state);
+
+            btDevice bt2 = null;
+
+            if (dock_state == 1 && !connecting) {
+                connecting = true;
+
+                bt2 = DB.getBTD("2");
+
+                // if it is none of the devices in the database, exit here
+                if (bt2 == null || bt2.getMac() == null) {
+                    connecting = false;
+                    Log.i(LOG_TAG, "Unknown device received, ignoring");
+                } else {
+                    Log.i(LOG_TAG, "Broadcast received: " + bt2.getDesc1() + ", " + bt2.getDesc2());
+                    DoConnected(bt2);
+                }
+            }
+
+            if (dock_state == 0 && !disconnecting) {
+                disconnecting = true;
+                bt2 = DB.getBTD("2");
+
+                // if it is none of the devices in the database, exit here
+                if (bt2 == null || bt2.getMac() == null) {
+                    disconnecting = false;
+                    Log.i(LOG_TAG, "Unknown device disconnect received, ignoring");
+                } else {
+                    Log.i(LOG_TAG, "Disconnected: " + bt2.getDesc1() + "," + bt2.getDesc2());
+                    DoDisconnected(bt2);
+                }
+            }
+        }
+    };
+
     private final BroadcastReceiver PowerEnterReceiver = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
 
+            Log.i(LOG_TAG, "PowerEnter Broadcast received, connecting="+connecting+", power_connected="+power_connected);
             if (!connecting) {
                 connecting = true;
 
@@ -1097,6 +1156,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
         @Override
         public void onReceive(Context context2, Intent intent2) {
             btDevice bt2 = null;
+            Log.i(LOG_TAG, "PowerExit Broadcast received, disconnecting="+disconnecting+", power_connected="+power_connected);
             if (!disconnecting && power_connected) {
                 disconnecting = true;
                 bt2 = DB.getBTD("4");
