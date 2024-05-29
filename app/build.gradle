@@ -1,18 +1,20 @@
 apply plugin: 'com.android.application'
 
-// Load keystore
-def keystorePropertiesFile = rootProject.file("keystore.properties");
-def keystoreProperties = new Properties()
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-
-
 android {
     signingConfigs {
         release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
+            def keyStore = System.getenv("ANDROID_KEYSTORE")
+            if (keyStore != null && keyStore != "") {
+                def keyStoreFile = keyStore + "/keystore"
+                def keyPropertiesFile = keyStore + "/keyprops"
+                project.logger.lifecycle("ANDROID KEYSTORE: Using store ${keyStoreFile} with properties ${keyPropertiesFile}")
+                storeFile file(keyStoreFile)
+                def kP = new Properties()
+                kP.load(new FileInputStream(keyPropertiesFile))
+                storePassword kP['storePassword']
+                keyAlias kP['keyAlias']
+                keyPassword kP['keyPassword']
+            }
         }
     }
     compileSdkVersion 28

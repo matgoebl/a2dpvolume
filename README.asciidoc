@@ -9,7 +9,7 @@ This fork adds special tasks for car connection:
 - notify remote server about connections/disconnections and gps position
   (url must be entered in field "Also connect to bluetooth device")
 
-Above tasks are run for devices that are assigned the car connection icon
+Above tasks are run for devices that are assigned the car connection icon.
 
 
 Further changes:
@@ -19,8 +19,9 @@ Further changes:
   A list of SSIDs must be entered in field "Also connect to bluetooth device" in
   the following format:
 
-  ssid: "mynet1" "mynet2" "someothernet"
+  ssid: mynet1 mynet2 someothernet
 
+- added dockerized building
 
 All those changes are very personal and provide only quick-and-dirty configuration.
 Therefore I do not plan to push them upstream.
@@ -28,6 +29,24 @@ But you are invited to pick them if they are useful to you.
 
 Upstream version: https://github.com/jroal/a2dpvolume
 
+== Dockerized Building
+
+Run `make` to perform a docker based build using [Android Build Box](https://github.com/mingchen/docker-android-build-box). 
+If you also use a [rootless docker](https://docs.docker.com/engine/security/rootless/), set the environment
+`export ANDROID_DOCKER_BUILD_CONTEXT=rootless`.
+
+In order to automatically sign your APKs, create an android keystore as `$HOME/.android-keystore/keystore`.
+Then create a file `$HOME/.android-keystore/keyprops` containing
+
+    storePassword=xxx
+    keyAlias=xxx
+    keyPassword=xxx
+
+and set `export ANDROID_KEYSTORE=$HOME/.android-keystore`.
+
+---
+
+This is the README from upstream:
 
 = Overview
 
