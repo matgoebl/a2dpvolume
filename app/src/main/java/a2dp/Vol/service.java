@@ -173,6 +173,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
     private volatile boolean connecting = false;
     private volatile boolean disconnecting = false;
     private volatile boolean power_connected = false;
+    private volatile boolean car_connected = false;
     private int connectedIcon;
     private TelephonyManager tm; // Context.getSystemService(Context.TELEPHONY_SERVICE);
 
@@ -728,7 +729,8 @@ public class service extends Service implements OnAudioFocusChangeListener {
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            if (!connecting) {
+            Log.i(LOG_TAG, "CarEnter Broadcast received, connecting="+connecting+", car_connected="+car_connected);
+            if (!connecting && connects < 1) {
                 connecting = true;
 
                 btDevice bt2 = DB.getBTD("1");
@@ -740,6 +742,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
                 } else {
                     Log.i(LOG_TAG, "Broadcast received: " + bt2.getDesc1() + ", " + bt2.getDesc2());
                     DoConnected(bt2);
+                    car_connected = true;
                 }
             }
         }
@@ -814,7 +817,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
         public void onReceive(Context context, Intent intent) {
 
             Log.i(LOG_TAG, "PowerEnter Broadcast received, connecting="+connecting+", power_connected="+power_connected);
-            if (!connecting) {
+            if (!connecting && connects < 1) {
                 connecting = true;
 
                 btDevice bt2 = DB.getBTD("4");
@@ -1112,7 +1115,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
         @Override
         public void onReceive(Context context2, Intent intent2) {
             btDevice bt2 = null;
-            if (!disconnecting) {
+            if (!disconnecting && car_connected) {
                 disconnecting = true;
                 bt2 = DB.getBTD("1");
 
@@ -1125,6 +1128,7 @@ public class service extends Service implements OnAudioFocusChangeListener {
                     DoDisconnected(bt2);
                 }
             }
+            car_connected = false;
         }
     };
 

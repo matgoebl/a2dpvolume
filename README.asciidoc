@@ -21,6 +21,7 @@ Further changes:
 
   ssid: mynet1 mynet2 someothernet
 
+- "power connection" and "car mode" trigger actions only, if not other connection is active
 - added dockerized building
 
 All those changes are very personal and provide only quick-and-dirty configuration.
