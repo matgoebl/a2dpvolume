@@ -1,0 +1,32 @@
+name: Build
+
+on:
+  push:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04
+    container: mingc/android-build-box:1.17.0
+    # BUG: this image is not compatible with actions/{checkout,cache,upload-artifact}@v4 with Node.js 20:
+    # The error message is: /__e/node20/bin/node: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.28' not found (required by /__e/node20/bin/node)
+    # So github complains: Node.js 16 actions are deprecated. Please update the following actions to use Node.js 20: actions/checkout@v3, actions/cache@v3, actions/upload-artifact@v3. For more information see: https://github.blog/changelog/2023-09-22-github-actions-transitioning-from-node-16-to-node-20/.
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/cache@v3
+      with:
+        path: /root/.gradle
+        key: ${{ runner.os }}-gradle-${{ hashFiles('*.gradle') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Build
+      run: |
+        bash ./gradlew assembleDebug
+
+    - name: Archive APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: A2DPVolume-debug.apk
+        path: app/build/outputs/apk/debug/app-debug.apk
